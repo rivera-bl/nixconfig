@@ -23,11 +23,6 @@
       source = ./tmuxinator;
       target = ".config/tmuxinator";
      };
-    "scripts" = {
-      recursive = true;
-      source = ../bin;
-      target = ".local/bin";
-     };
     "abbreviations" = {
       source = ./zsh/abbr.zsh;
       target = ".config/zsh/abbreviations";
