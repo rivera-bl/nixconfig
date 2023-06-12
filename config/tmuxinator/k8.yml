@@ -1,0 +1,17 @@
+name: k8
+root: ~/code/gitlab/seguridad-informatica/regional/devsecops/sdlc/iac/applications-configurations
+
+windows:
+  - main:
+      layout: even-horizontal
+      panes:
+        - nvim -S
+        - clear
+  - tile:
+      layout: tiled
+      # TODO use a hook instead
+      panes:
+        - clear
+        - clear
+        - clear
+        - clear

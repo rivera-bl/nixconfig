@@ -1,0 +1,10 @@
+name: argocd
+root: ~/
+
+windows:
+  - main:
+      layout: even-horizontal
+      root: ~/code/gitlab-scm/seguridad-informatica/regional/devsecops/sdlc/iac/modules/aws-modules/argocd
+      panes:
+        - nvim -S -c 'a'
+        - clear

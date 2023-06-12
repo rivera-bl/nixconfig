@@ -1,0 +1,33 @@
+---
+nsuser:
+  soundName: Ping
+  soundNameFail: Basso
+say:
+  voice: Alex
+espeak:
+  voiceName: english-us
+speechsynthesizer:
+  voice: Microsoft David Desktop
+bearychat:
+  incomingHookURI: 1234567890abcdefg
+keybase:
+  conversation: yourteam
+  channel: general
+pushbullet:
+  accessToken: 1234567890abcdefg
+  deviceIden: 1234567890abcdefg
+pushover:
+  userKey: 1234567890abcdefg
+  apiToken: 1234567890abcdefg
+pushsafer:
+  key: 1234567890abcdefg
+simplepush:
+  key: 1234567890abcdefg
+  event: 1234567890abcdefg
+slack:
+  appurl: 'https://hooks.slack.com/services/xxx/yyy/zzz'
+twilio:
+  numberto: +972542877978
+  numberfrom: +18111119711
+  accountsid: AC3cd135aa82XXXXXXXXf792ba23fc98
+  authtoken: 74efd0bXXXXXXXXXXX32f7daca

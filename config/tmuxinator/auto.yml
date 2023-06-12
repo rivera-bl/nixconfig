@@ -1,0 +1,15 @@
+name: auto
+root: ~/
+
+windows:
+  - query:
+      layout: even-horizontal
+      root: ~/autogpt
+      panes:
+        - python -m autogpt
+  - langc:
+      layout: even-horizontal
+      root: ~/code/personal/flakes/
+      panes:
+        - nvim -S -c 'a'
+        - cd langc

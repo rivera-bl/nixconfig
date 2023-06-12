@@ -1,0 +1,16 @@
+name: rem
+root: ~/
+
+windows:
+  - dev:
+      layout: even-horizontal
+      root: ~/code/github/aws-remediations/
+      panes:
+        - nvim -S
+        - 
+  - sam:
+      layout: even-horizontal
+      root: ~/code/sam/hello-world/
+      panes:
+        - nvim -S
+        -

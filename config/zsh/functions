@@ -1,0 +1,705 @@
+#!/bin/sh
+
+# $@ acc/sts/role
+function vault_sts(){
+  vaultread=$(vault read --format=json ${@})
+
+  # Extract the values using jq and export them as environment variables
+  export ACCESS_KEY=$(jq -r '.data.access_key' <<< "$vaultread")
+  export SECRET_KEY=$(jq -r '.data.secret_key' <<< "$vaultread")
+  export SECURITY_TOKEN=$(jq -r '.data.security_token' <<< "$vaultread")
+}
+
+
+# create key asap
+function _ssh_key(){
+  ssh-keygen -f ~/.ssh/${1} -t ed25519 -a 100
+  cat ~/.ssh/${1}.pub | clip.exe # add .pub key to github settins
+  echo "IdentityFile ~/.ssh/${1}" > ~/.ssh/config
+}
+
+# $1 dir, $2 type
+# create files for nix based projects
+function tplate(){
+  if [ $2 = "py" ]; then
+    TEMPLATES_DIR="${HOME}/code/personal/flakes/_docs/templates"
+    echo "Generating nix files for ${1} project"
+    cp -r "${TEMPLATES_DIR}/nix/python" $1
+    sed -i 's/name = "";/name = "'${1}'";/' "$1/default.nix"
+    sed -i 's/venvDir = ".venv-";/venvDir = ".venv-'${1}'";/' "$1/default.nix"
+    cd $1
+    direnv allow
+  fi 
+}
+
+# run temporary container with kubectl
+function krt(){
+ # alpine:3.14
+ # TODO check if image exists first. 
+ ## exit, image doesn't exist? try minikube image load $@ 
+ ## TODO check for bash and sh
+ ## exit, image doesnt have shell
+ kubectl run tmp --rm -ti --image=${@} -- sh
+ kubectl delete pod tmp > /dev/null
+}
+
+# $1 dirname, can't use '{}'
+function kusf(){
+  mkdir -p $1/{base,overlays}
+  mkdir -p $1/overlays/{dev,prod}
+  touch $1/base/kustomization.yaml
+  touch $1/overlays/{dev,prod}/kustomization.yaml
+  echo "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization" > $1/base/kustomization.yaml
+  echo "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization" > $1/overlays/dev/kustomization.yaml
+  echo "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization" > $1/overlays/prod/kustomization.yaml
+}
+
+# git clone an entire group projects recursively, $1 url $2 group id
+# working only with gitlab-scm for now, cause of the :3222 port in the url
+function gcgroup(){
+  projects_ssh_url=$(curl --silent --insecure --header \
+                      "PRIVATE-TOKEN: $GITLAB_SCM_API_TOKEN" "https://$1/api/v4/groups/$2/projects?include_subgroups=true&per_page=100" | \
+                      jq -r ".[].ssh_url_to_repo")
+  while read line; do
+    dir=$(echo $line | awk -F ':' '{print $3}' | cut -d. -f1 | cut -d/ -f3-)
+    git clone $line ~/code/gitlab-scm/$dir
+  done <<< $projects_ssh_url
+}
+
+# remove every nix profile (for mac weirdness)
+# nix build --no-link  ~/system/#homeConfigurations.mac.activationPackage
+# "$(nix path-info ~/system/#homeConfigurations.mac.activationPackage)"/activate
+function npr(){
+  for ((i=$(nix profile list | wc -l);i>=0;i-=1)); do 
+    nix profile remove $i; 
+  done
+}
+
+# TODO send errors of curl to STDOUT
+# execute gitlab project pipeline
+function gci(){
+  case $1 in
+  "trabell")
+    ref="PTECH-12837"
+    project_id="39616194"
+    token=$GITLAB_TRABELL_PIPELINE_TRIGGER
+    namespace="$2"
+     ;;
+  "ecom-security")
+    ref="PTECH-12837"
+    project_id="19799255"
+    token=$GITLAB_ECOM_SECURITY_PIPELINE_TRIGGER
+    namespace="$2"
+    ;;
+  esac
+
+  pipeline_id=$(curl -s --request POST \
+       --form token=$token \
+       --form ref=$ref \
+       "https://gitlab.com/api/v4/projects/$project_id/trigger/pipeline" | jq '.id')
+
+  url="https://gitlab.com/$namespace/-/pipelines/$pipeline_id"
+  echo $url | pbcopy && open -n $url
+}
+
+# copy git remote to clipboard (mac), pass -o to open in browser
+function gurl() {
+  url="https://$(git remote -v | head -n1 | awk '{print $2}' | awk -F '@' '{print $2}' | cut -d. -f1,2 | tr ':' '/')"
+  echo $url | pbcopy
+  [[ $1 == "-o" ]] && open -n $url
+}
+
+# find dirs into $1 and cd
+function diz() {
+  dir=$1
+  [[ -z "$1" ]] && dir="$HOME/code"
+  selection=$(find $dir -type d -not -path "*/.git*" | \
+    fzf --preview 'lsd --tree --depth=2 {1}')
+  [[ ! -z "$selection" ]] && cd $selection
+}
+
+# tmux setenv and export
+function tenv(){
+  tmux setenv $1 $2 && export $(tmux showenv | grep "^$1")
+}
+
+# clone repo to same tree structure, meant to use with gitlab projects
+function gtr(){
+  destination=$(echo $1 | awk -F ':' '{print $2}' | cut -d. -f1)
+  git clone $1 ~/code/$destination && cd ~/code/$destination 
+}
+
+# insert csv files to sqlite database $1:folder, $2:dbfile
+function insert_csv(){
+  csv_files=$(find $1 -type f -name '*.csv')
+  while read line; do 
+    table_name=$(basename $line | awk -F '.' '{print $1}');
+    sqlite3 $2 \
+      ".import --csv $line $table_name"
+  done <<< $csv_files
+}
+
+function k8_ecr_auth(){
+  ACCOUNT=$(tmux showenv | \
+    grep '^AWS_PROFILE' | awk -F '=' '{print $2}' | awk -F '_' '{print $1}')
+  TOKEN=$(aws ecr get-login-password --region us-east-1 | cut -d' ' -f6)
+  kubectl delete secret regcred --ignore-not-found=true
+  kubectl create secret docker-registry regcred --docker-server=$ACCOUNT.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$TOKEN
+  # kubectl patch serviceaccount default -p "{\"imagePullSecrets\": [{\"name\": \"regcred\"}]}"
+}
+
+function fzf_git_dirs(){
+  sh ~/code/github/fzf_git/fzf_git
+}
+
+#
+# Select a function to execute
+function kmenu(){
+  vals=("pods" "service" "deployment" "secrets" "events" "pvc" "debug" "helm")
+  selection=$(printf "%s\n" "${vals[@]}" | fzf-tmux -p)
+  case $selection in
+  "pods")
+     func="kpod"
+     ;;
+  "service")
+     func="ksvc"
+     ;;
+  "deployment")
+     func="kdep"
+     ;;
+  "events")
+     func="keve"
+     ;;
+  "pvc")
+     func="kpvc"
+     ;;
+  "debug")
+     func="kbug"
+     ;;
+  "helm")
+     func="hval"
+     ;;
+  "secrets")
+     func="kdec"
+     ;;
+  esac
+  if [ ! -z "$selection" ]; then
+    export func=$func
+    # tmux split-window -h
+    tmux neww zsh -c "source ~/system/home/zsh/functions; $func"
+    unset func
+  fi
+}
+
+#
+# TODO columns add network,gpu,ebs,etc
+# echo "$(( ( 1024 + 1000 / 1000  ) / 1000  ))"
+#
+# List aws instance types, and copy $selection to tmux buffer
+function aws_instance_types(){
+  mkdir -p /tmp/.aws_instance_types_cache
+  CACHE_FILE=/tmp/.aws_instance_types_cache/${AWS_PROFILE=:default}
+  if [[ -s "$CACHE_FILE" ]]; then
+    cat $CACHE_FILE | fzf --header-lines=1
+  else
+    # jq values separated by space | sort by cpu/ram | sed add headers | column | fzf
+    SELECTION=$(aws ec2 describe-instance-types --region us-east-1 | \
+      jq -r '.InstanceTypes[] | "\(.InstanceType) \(.VCpuInfo.DefaultVCpus) \(.MemoryInfo.SizeInMiB)"' | \
+      sort -k2,2n -k3,3n | \
+      sed '1i TYPE CPU RAM' | column -t | tee $CACHE_FILE | \
+      fzf --header-lines=1)
+  fi
+
+  if [ ! -z "$SELECTION" ]; then
+    TYPE=$(echo $SELECTION | awk '{print $1}')
+    tmux setb $TYPE
+    echo "$SELECTION"
+  fi
+}
+
+#
+# TODO --bind to set session-wide
+# --bind 'space:execute(tmux send-keys "tmux setenv AWS_PROFILE {1} && tmux_set_env "export $(tmux showenv | grep '^AWS_PROFILE')"" Enter)+abort'
+#
+# Set $AWS_PROFILE env
+function _set_aws_profile_env(){
+  FILE=~/.aws/credentials
+  cat "$FILE" | grep -o -P '(?<=\[).*(?=\])' | \
+                sed '1i PROFILE' | \
+                fzf --header-lines=1 \
+                --bind 'enter:execute(tmux send-keys "export AWS_PROFILE={1}" Enter)+abort'
+}
+
+#
+# Set profile creds in ~/.aws/credentials & $AWS_PROFILE in current shell and tmux env
+# Without arguments prompts for a profile to select with fzf.
+function set_aws_profile(){
+    FILE=~/.aws/credentials
+    mkdir -p ~/.aws && touch $FILE
+
+    if [ ! -z "$1" ]; then
+      # match between [ and ]
+      PROFILE=$(grep -o -P '(?<=\[).*(?=\])' <<< $1)
+
+      # remove between $PROFILE and \n
+      sed -i "/$PROFILE/,/^\s*$/{d;}" $FILE # add '' after -i for macOS compatibility
+
+      # replace ' ' with \n
+      echo "$1" | tr ' ' '\n' >> $FILE
+      # cant append \n to $1 wtf
+      echo "" >> $FILE
+
+      tmux setenv AWS_PROFILE $PROFILE && export $(tmux showenv | grep '^AWS_PROFILE')
+    else
+      _set_aws_profile_env
+    fi
+}
+
+#
+# space: toggle preview
+# ctrl-r: reload list
+# 
+# enter: exec pod
+# ctrl-d: delete pod
+# ctrl-o: rollout restart
+# ctrl-s: describe
+# ctrl-S: edit
+# ctrl-l: logs
+# ctrl-L: follow logs
+# ctrl-v: events
+#
+# get pods -A and multiple previews
+function kpod() {
+  FZF_DEFAULT_COMMAND="kubectl get pod --all-namespaces" \
+  fzf --info=inline --layout=reverse --multi --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'| ctrl-v:events | ctrl-s:describe | ctrl-l:logs | ctrl-e:edit | ctrl-f:follow |\n\n' \
+    --bind 'space:toggle-preview' \
+    --bind 'ctrl-r:reload:kubectl get pod --all-namespaces' \
+    --bind 'enter:execute(tmux -c "kubectl exec -it --namespace {1} {2} -- bash || kubectl exec -it --namespace {1} {2} -- sh")+abort' \
+    --bind 'ctrl-d:execute-multi(kubectl delete pod --namespace {1} {2} --force)+reload(kubectl get pod --all-namespaces)+abort' \
+    --bind 'ctrl-o:execute(kubectl rollout restart deployment --namespace {1} $(echo {2} | rev | cut -f3- -d "'"-"'" | rev))+reload(kubectl get pod --all-namespaces)' \
+    --bind 'ctrl-s:preview:kubectl describe pod --namespace {1} {2} | bat --color=always -l yaml' "$@" \
+    --bind 'ctrl-e:execute:kubectl edit pod --namespace {1} {2} > /dev/tty' \
+    --bind 'ctrl-l:preview:kubectl logs --all-containers --tail=10000 --namespace {1} {2} | tac' "$@" \
+    --bind 'ctrl-f:execute(tmux send-keys "a=$(kubectl get pod --namespace {1} {2} -o json | jq -r ".metadata.ownerReferences[].name") && stern \$a -n {1}" Enter)+abort' \
+    --bind "ctrl-v:preview:kubectl get event --namespace {1} --field-selector involvedObject.name={2} | sed -e '1s/LAST SEEN/SEEN/' | awk '{\$4=\"\"; \$5 = \"\t\" \$5; \$1 = \"\t\" \$1; \$2 = \"\t\" \$2; \$3 = \"\t\" \$3; print \$0;}' | column -t -s \$'\t' | sed '1{H;1h;\$!d;\${g;q;};};\$G' | tac | bat --plain --color=always -l fstab" "$@" \
+    --bind 'ctrl-h:preview:echo "ctrl-v: events\nctrl-s: describe\nctrl-l: logs\nctrl-e: edit\nctrl-f: follow" | bat --plain -l yaml' \
+    --preview-window right,60% \
+    --preview "kubectl get event --namespace {1} --field-selector involvedObject.name={2} | sed -e '1s/LAST SEEN/SEEN/' | awk '{\$4=\"\"; \$5 = \"\t\" \$5; \$1 = \"\t\" \$1; \$2 = \"\t\" \$2; \$3 = \"\t\" \$3; print \$0;}' | column -t -s \$'\t' | sed '1{H;1h;\$!d;\${g;q;};};\$G' | tac | bat --plain --color=always -l fstab" "$@" \
+}
+
+#
+# TODO would be great to be able to just copy the value to clipboard using a number for the index of the key, much like vim motions
+# TODO secrets arent decoded correctly, should pass each value based on index, right now is deoding every secret at once, can try with some simple value and chech that they are all the same
+# 
+# Preview secrets with bat, on enter open decoded secrets with vim
+function kdec() {
+  FZF_DEFAULT_COMMAND="kubectl get secrets -A" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 60% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'╱ Enter (base64 -d) ╱\n\n' \
+    --bind 'enter:execute:a=("${(@f)$(kubectl get secret -n {1} {2} -o json | jq -r ".data | keys[]")}") && for i in "$a[@]"; do z=$i b+="$i: |\n $(kubectl get secret -n {1} {2} -o json | jq -r --arg z "${z}" "'".data[$z]"'" | base64 -d)\n"; done && echo $b | nvim -c ":g/^$/d" -c "set syntax=yaml" -c "setlocal buftype=nofile"' \
+    --preview-window right:follow,50% \
+    --preview 'kubectl get secret --namespace {1} {2} -o json | bat --wrap auto --style=numbers --color=always -l json' "$@"
+}
+
+#
+# TODO execute something to get more information
+# kubectl get events --field-selector type=Warning
+# 
+# List events
+function keve() {
+  FZF_DEFAULT_COMMAND="kubectl get event -A --sort-by=.metadata.creationTimestamp | sed '1{H;1h;\$!d;\${g;q;};};\$G' | tac" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --preview-window right
+}
+
+# List pvc's, enter to mount on temporary pod
+function kpvc() {
+  FZF_DEFAULT_COMMAND="kubectl get pvc" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 80% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'| Enter (mount on temporary pod pvc-inspector) |\n\n' \
+		--bind 'enter:execute(cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-inspector
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 2000
+    fsGroup: 2000 
+  containers:
+  - image: busybox
+    name: pvc-inspector
+    command: ["tail"]
+    args: ["-f", "/dev/null"]
+    volumeMounts:
+    - mountPath: /pvc
+      name: pvc-mount
+  volumes:
+  - name: pvc-mount
+    persistentVolumeClaim:
+      claimName: {1}
+EOF)+execute(sleep 5s && kubectl exec -ti pvc-inspector -- sh -c "cd /pvc && /bin/sh")+execute(kubectl delete pod pvc-inspector --force)+abort' "$@" \
+    --preview-window right:follow,50% \
+    --preview 'kubectl describe pvc --namespace {1} {2} | bat -l yaml' "$@"
+}
+
+#
+# TODO fix that execute ':' only works for unnamed ports
+# TODO add action after port forward to open a browser on localhost/{port}
+# verbose:
+# --bind 'enter:execute(tmux send-keys "svc=$(kubectl get service -n {1} {2} | awk "FNR==2{print \$5}" | sed "s/\/.*//") && kubectl port-forward -n {1} svc/{2} \$svc:\$svc" Enter)+abort' \
+#
+# Get svc, port-forward
+function ksvc() {
+  FZF_DEFAULT_COMMAND="kubectl get svc -A" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'╱ Enter (port forward) ╱\n\n' \
+    --bind 'enter:execute(tmux send-keys "kubectl port-forward -n {1} svc/{2} :" Enter)+abort' \
+    --preview-window right \
+    --preview 'kubectl get svc --namespace {1} {2} -o yaml | bat -l yaml' "$@"
+}
+
+function kdep() {
+  FZF_DEFAULT_COMMAND="kubectl get deployment -A" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'| ctrl-o (restart) |\n\n' \
+    --bind 'space:toggle-preview' \
+    --bind 'ctrl-r:reload:kubectl get deployment --all-namespaces' \
+    --bind 'ctrl-o:execute(tmux -c "kubectl rollout restart deployment -n {1} {2}" Enter)+abort' \
+    --preview-window right \
+    --preview 'kubectl describe deployment --namespace {1} {2} | bat -l yaml' "$@"
+}
+
+#
+# TODO cycle preview between computed/user values
+#
+# Preview all values of helm releases and enter to open in vim
+function hval() {
+  FZF_DEFAULT_COMMAND="helm list -A | awk 'BEGIN {FS=\"\t\"; OFS=\"    \"} {print \$2, \$1, \$6, \$7, \$5, \$3, \$4}'" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'╱ Enter (open with vim) ╱\n\n' \
+    --bind 'enter:execute:helm get values --all --namespace {1} {2} -o yaml | nvim -R -c "set syntax=yaml"' \
+    --preview-window right \
+    --preview 'helm get values --all --namespace {1} {2} -o yaml | bat --style=numbers --color=always -l yaml' "$@"
+}
+
+##################
+### KUBECTL
+##################
+
+# switch k8 namespace
+function k8_namespace_switch(){
+  selection=$(kubectl get namespaces |  fzf --header-lines=1)
+
+  if [ ! -z "$selection" ]; then
+    namespace=$(echo $selection | awk '{print $1}')
+    kubectl config set-context --current --namespace=$namespace
+  fi
+}
+
+# kubectl debug dpc5-8554458c8f-zdrl5 -it --image=ubuntu --share-processes --copy-to=debug-dpc5
+# kubectl exec -ti debug-dpc5 -c $(kubectl debug  dpc5-8554458c8f-zdrl5 --image=ubuntu --share-processes --copy-to=debug-dpc5 | awk '{print $6}' | tr -d '.' && sleep 5s) -- sh
+#
+# Debug a container
+# TODO ?add to kpod functions
+# TODO clear prompt on ctrl-v
+# TODO show account number
+function kbug() {
+  FZF_DEFAULT_COMMAND="kubectl get pod -A" \
+  fzf --info=inline --layout=reverse --header-lines=1 \
+    --height 99% \
+    --prompt "$(kubectl config current-context | sed 's/-cluster$//')> " \
+    --header $'| [1]: Enter (kubectl debug), [2]: ctrl-v (select debugger) |\n\n' \
+    --bind 'enter:execute-silent(tmux setenv kbug_namespace {1} && tmux setenv kbug_pod {2})+reload(aws ecr describe-repositories --region us-east-1 | jq ".repositories[].repositoryUri" |  tr -d "\"")' \
+    --bind 'ctrl-v:execute(export $(tmux show-environment | grep "^kbug_namespace") && export $(tmux show-environment | grep "^kbug_pod") && kubectl debug -ti -n $kbug_namespace $kbug_pod --image={1} --share-processes --copy-to=debug-$kbug_pod -- bash && tmux -c "kubectl delete pod debug-$kbug_pod --force" Enter)+abort' \
+}
+
+#
+# TODO use fzf to select an image from a list of local+remote
+# TODO use fzf to select a pod after selecting an image
+# how to do 2 fzf selections in a single command call?
+#
+# Debug a pod
+function ku(){
+  kubectl debug $1 -it --image=$2 --share-processes --copy-to="debug-${1}"
+}
+
+# Delete debug pods in current namespace
+function kdu(){
+  debuggers=("${(@f)$(kubectl get pod -A | grep "debug" | fzf --multi)}")
+
+  if [ ! -z "$debuggers" ]; then
+    for i in "${debuggers[@]}"; do
+      namespace=$(echo $i | awk '{print $1}')
+      pod=$(echo $i | awk '{print $2}')
+      kubectl delete pod $pod -n $namespace --force 2>/dev/null
+    done   
+  fi
+}
+
+##################
+### NIX
+##################
+
+# Rollback a nixos generation
+function nixos_generation_rollback(){
+  selection=$(sudo nix-env --list-generations -p /nix/var/nix/profiles/system | tac | fzf-tmux -p --border)
+  if [ ! -z "$selection" ]; then
+    generation=$(echo $selection | awk '{print $1}')
+    echo "Rolling back\n$selection\n"
+    sudo nix-env --switch-generation -p /nix/var/nix/profiles/system $generation
+  fi
+}
+
+# Rollback a home-manager generation
+function home_generation_rollback(){
+  selection=$(home-manager generations | fzf-tmux -p --border)
+  if [ ! -z "$selection" ]; then
+    generation=$(echo $selection | awk '{print $7}')
+    echo "Rolling back\n$selection\n"
+    $generation/activate
+  fi
+}
+
+# Nix build and load image
+function nix_image_build(){
+  $(nix-build $1) | podman load
+}
+
+# nix-docker-prefetch quickly
+function nix_image_prefetch(){
+  if [[ "$1" == *":"* ]]; then
+    split=$(echo $1 | tr ":" " ")
+  else
+    split="${1} latest"
+  fi
+
+  img=$(echo $split | awk '{print $1}')
+  tag=$(echo $split | awk '{print $2}')
+
+  nix-shell -p nix-prefetch-docker --command "nix-prefetch-docker --image-name ${img} --image-tag ${tag}"
+}
+
+##################
+### PODMAN 
+##################
+
+# docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
+
+# Select images to push
+function ppi(){
+  images=("${(@f)$(podman images | tail -n +2 | fzf --multi | awk '{print $1":"$2}')}")
+
+  if [ ! -z "$images" ]; then
+    for i in "${images[@]}"; do
+      echo "\nUPLOADING ${i}"
+      podman push $i
+      uploaded+=" $i\n"
+    done   
+    echo "\nUPLOADED:\n$uploaded"
+  fi
+}
+
+# Import tar images from current directory onwards
+function pii(){
+  TARS=$(find . -iname "*.tar*" | sed '1i TAR' | column -t | fzf --multi --header-lines=1)
+  for i in $(echo "$TARS" ); do
+    # LOADED+="$(podman load -i $i)\n"
+    docker load -i "$i"
+    sleep 1
+  done
+  # tmux send-keys "echo -e \"$LOADED\""
+}
+
+# Select a container to start and attach to
+function pac() {
+  local cid
+  cid=$(podman ps -a | sed 1d | fzf -1 -q "$1" | awk '{print $1}')
+
+  [ -n "$cid" ] && podman start "$cid" && podman attach "$cid"
+}
+
+# Select a running container to stop
+function psc() {
+  local cid
+  cid=$(podman ps | sed 1d | fzf -q "$1" | awk '{print $1}')
+
+  [ -n "$cid" ] && podman stop "$cid"
+}
+
+# Select a container to remove
+function prc() {
+  podman ps -a | sed 1d | fzf -q "$1" --no-sort -m --tac | awk '{ print $1 }' | xargs -r podman rm
+}
+# Select an image or images to remove
+function pri() {
+  podman images | sed 1d | fzf -q "$1" --no-sort -m --tac | awk '{ print $3 }' | xargs -r podman rmi --force
+}
+
+##################
+### GENERAL
+##################
+
+# help ${command} to view colored with bat
+function help(){
+  $@ --help | bat -l help
+}
+
+# TODO fix how to connect to ssid's with spaces
+# nmcli connect
+function wifi(){
+  selection=$(nmcli device wifi list | fzf --header-lines=1)
+
+  if [ ! -z "$selection" ]; then
+    ssid=$(echo $selection | awk '{print $2}')
+    nmcli --ask device wifi connect $ssid 
+  fi
+}
+
+# clear screen
+function clear_screen() {
+  builtin echoti civis >"$TTY"
+  builtin print -rn -- $'\e[H\e[2J' >"$TTY"
+  builtin zle .reset-prompt
+  builtin zle -R
+  # builtin print -rn -- $'\e[3J' >"$TTY" # clear scrollback
+  builtin echoti cnorm >"$TTY"
+}
+zle -N clear_screen
+bindkey -r '^w'
+bindkey '^w' clear_screen
+bindkey -s '^Q' 'tmux kill-pane\n'
+
+# Colorized manpages
+function man() {
+    env \
+    LESS_TERMCAP_mb="$(printf "\e[1;31m")" \
+    LESS_TERMCAP_md="$(printf "\e[1;31m")" \
+    LESS_TERMCAP_me="$(printf "\e[0m")" \
+    LESS_TERMCAP_se="$(printf "\e[0m")" \
+    LESS_TERMCAP_so="$(printf "\e[1;44;33m")" \
+    LESS_TERMCAP_ue="$(printf "\e[0m")" \
+    LESS_TERMCAP_us="$(printf "\e[1;32m")" \
+    man "${@}"
+}
+
+# Send keys to multiple tmux panes when zsh|bash not running any process
+function _send_bash_command_to_session() {
+    if [[ $# -eq 0 || "$1" = "--help" ]] ; then
+        echo 'Usage: _send_bash_command_to_session $session_name what ever command you want: '
+        return
+    fi
+    input_session="$1"
+    input_command="${@:2}"
+    # trimmed_command=$(echo -n "$input_command" | tr '\n' ' ') # not necessary if "$command"
+    for _pane in $(tmux list-panes -s -t ${input_session} -F '#{window_index}.#{pane_index}'); do
+        # only apply the command in bash or zsh panes.
+        _current_command=$(tmux display-message -p -t ${input_session}:${_pane} '#{pane_current_command}')
+        if [ ${_current_command} = zsh ] || [ ${_current_command} = bash ] ; then
+            tmux send-keys -t ${_pane} "$input_command && clear_screen 2>/dev/null" Enter
+        fi
+
+    done
+}
+function tmux_set_env() {
+    _current_session=$(tmux display-message -p '#{session_name}')
+    _send_bash_command_to_session ${_current_session} $@ # if multi-line wrap in ""
+}
+
+# Select buku bookmarks and open in browser
+function fb() {
+    # fzf with multi-selection, format to column and save to array
+    website=("${(@f)$(buku -p -f 5 | column -ts$'\t' | fzf --multi)}")
+
+    # open each website
+    for i in "${website[@]}"; do
+        index="$(echo "$i" | awk '{print $1}')"
+        buku -p "$index"
+        buku -o "$index"
+    done
+}
+
+# Preview the files
+function fbat() {
+  FZF_DEFAULT_COMMAND="find -type f | LANG=C sort" \
+  fzf --info=inline --layout=reverse \
+      --height 99% \
+      --header $'╱ Enter (open with vim) ╱\n\n' \
+      --bind 'enter:execute:vi {1} > /dev/tty' \
+      --preview-window right:follow,70% \
+      --preview 'bat --style=numbers --color=always --line-range :500 {}'
+}
+
+##################
+### CLIPBOARD
+##################
+
+function x11-clip-wrap-widgets() {
+    # NB: Assume we are the first wrapper and that we only wrap native widgets
+    # See zsh-autosuggestions.zsh for a more generic and more robust wrapper
+    local copy_or_paste=$1
+    shift
+
+    for widget in $@; do
+        if [[ $copy_or_paste == "copy" ]]; then
+            eval "
+            function _x11-clip-wrapped-$widget() {
+                zle .$widget
+               xclip -in -selection clipboard <<<\$CUTBUFFER
+            }
+            "
+        else
+            eval "
+            function _x11-clip-wrapped-$widget() {
+                CUTBUFFER=\$(xclip -out -selection clipboard)
+                zle .$widget
+            }
+            "
+        fi
+
+        zle -N $widget _x11-clip-wrapped-$widget
+    done
+}
+
+local copy_widgets=(
+    vi-yank vi-yank-eol vi-delete vi-backward-kill-word vi-change-whole-line
+)
+local paste_widgets=(
+    vi-put-{before,after}
+)
+
+# NB: can atm. only wrap native widgets
+x11-clip-wrap-widgets copy $copy_widgets
+x11-clip-wrap-widgets paste  $paste_widgets
+
+##################
+### Legacy
+##################
+
+# # Load a selected group of aliases
+# function load_abbr(){
+#   abbrs=("${(@f)$(cat ~/system/home/zsh/abbr.zsh)}")
+
+#   for i in "${abbrs[@]}"; do
+#     if [[ ${i:0:1} != "#" ]] ; then
+#       al=$(echo $i | cut -d " " -f2- | tr -d '"')
+#       abbr add $al
+#     fi
+#   done
+# }

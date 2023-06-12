@@ -1,0 +1,20 @@
+name: sys
+root: ~/
+
+windows:
+  - nixos:
+      layout: even-horizontal
+      root: ~/code/personal/system/
+      panes:
+        - nvim -S
+  - flakes:
+      layout: even-horizontal
+      root: ~/code/personal/flakes/
+      panes:
+        - nvim -S -c 'a'
+        - poetry -C /home/wim/code/personal/flakes/fws run main
+  - nixpkgs:
+      layout: even-horizontal
+      root: ~/nix/
+      panes:
+        - nvim -S -c 'a'
