@@ -114,7 +114,7 @@
       zstyle ':completion::*:terraform::*' fzf-completion-opts \\
                                             --preview-window=80% \\
                                             --height=60% \\
-                                            --preview='eval terraform {1} -help | bat --color=always'
+                                            --preview='eval terraform {1} -help | bat -l help'
       # # only makes sense for first command
       # zstyle ':completion::*:git::*' fzf-completion-opts \\
       #                                 --height=60% \\
