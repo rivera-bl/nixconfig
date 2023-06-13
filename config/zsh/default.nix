@@ -111,7 +111,14 @@
       source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
       zstyle ':completion:*' fzf-search-display true # allow match on description
       zstyle ':completion::*:lsd::*' fzf-completion-opts --preview='eval bat --color=always {1}'
-      zstyle ':completion::*:terraform::*' fzf-completion-opts --height=60% --preview='eval terraform {1} -help | bat --color=always '
+      zstyle ':completion::*:terraform::*' fzf-completion-opts \\
+                                            --preview-window=80% \\
+                                            --height=60% \\
+                                            --preview='eval terraform {1} -help | bat --color=always'
+      # # only makes sense for first command
+      # zstyle ':completion::*:git::*' fzf-completion-opts \\
+      #                                 --height=60% \\
+      #                                 --preview='eval man git {1} | bat -l manpage'
       export FZF_COMPLETION_AUTO_COMMON_PREFIX=true
 
       # terraform completion
