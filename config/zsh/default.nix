@@ -114,6 +114,10 @@
                                             --preview-window=80% \\
                                             --height=60% \\
                                             --preview='eval terraform {1} -help | bat -l help'
+      zstyle ':completion::*:vault::*' fzf-completion-opts \\
+                                            --preview-window=80% \\
+                                            --height=60% \\
+                                            --preview='eval vault {1} -help | bat -l help'
       # # only makes sense for first command
       # zstyle ':completion::*:git::*' fzf-completion-opts \\
       #                                 --height=60% \\
@@ -122,6 +126,7 @@
 
       # terraform completion
       complete -C ${pkgs.terraform}/bin/terraform terraform
+      complete -C ${pkgs.vault}/bin/vault vault
 
       # kubectl completion
       source <(kubectl completion zsh)
