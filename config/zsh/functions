@@ -5,17 +5,16 @@ function vault_sts(){
   vaultread=$(vault read --format=json ${@})
 
   # Extract the values using jq and export them as environment variables
-  export ACCESS_KEY=$(jq -r '.data.access_key' <<< "$vaultread")
-  export SECRET_KEY=$(jq -r '.data.secret_key' <<< "$vaultread")
-  export SECURITY_TOKEN=$(jq -r '.data.security_token' <<< "$vaultread")
+  export AWS_ACCESS_KEY_ID=$(jq -r '.data.access_key' <<< "$vaultread")
+  export AWS_SECRET_ACCESS_KEY=$(jq -r '.data.secret_key' <<< "$vaultread")
+  export AWS_SESSION_TOKEN=$(jq -r '.data.security_token' <<< "$vaultread")
 }
 
-
-# create key asap
+# ssh asap
 function _ssh_key(){
   ssh-keygen -f ~/.ssh/${1} -t ed25519 -a 100
   cat ~/.ssh/${1}.pub | clip.exe # add .pub key to github settins
-  echo "IdentityFile ~/.ssh/${1}" > ~/.ssh/config
+  echo "IdentityFile ~/.ssh/${1}" >> ~/.ssh/config
 }
 
 # $1 dir, $2 type

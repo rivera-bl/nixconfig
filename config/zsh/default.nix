@@ -108,7 +108,10 @@
       # zvm_after_init_commands+=('[ -f /home/nixos/system/home/zsh/.fzf.zsh ] && source /home/nixos/system/home/zsh/.fzf.zsh')
       source <(kubectl completion zsh)
       # make completion work with kubecolor
-      compdef kubecolor=kubectl
+      source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
+      zstyle ':completion:*' fzf-search-display true # allow match on description
+      zstyle ':completion::*:lsd::*' fzf-completion-opts --preview='eval bat --color=always {1}'
+      # compdef kubecolor=kubectl
     ";
 
     # .zlogin

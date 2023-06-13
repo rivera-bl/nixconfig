@@ -9,3 +9,5 @@ wsl --shutdown
 wsl -d ${distro}
 echo "hola" | clip.exe
 ````
+
+Editor is other repository.
