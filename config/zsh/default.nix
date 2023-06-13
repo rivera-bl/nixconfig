@@ -110,7 +110,6 @@
       # fzf-tab-completion
       source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
       zstyle ':completion:*' fzf-search-display true # allow match on description
-      zstyle ':completion::*:lsd::*' fzf-completion-opts --preview='eval bat --color=always {1}'
       zstyle ':completion::*:terraform::*' fzf-completion-opts \\
                                             --preview-window=80% \\
                                             --height=60% \\
