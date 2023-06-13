@@ -106,11 +106,20 @@
       # ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
       # # otherwise it overrides fzf C-r
       # zvm_after_init_commands+=('[ -f /home/nixos/system/home/zsh/.fzf.zsh ] && source /home/nixos/system/home/zsh/.fzf.zsh')
-      source <(kubectl completion zsh)
-      # make completion work with kubecolor
+
+      # fzf-tab-completion
       source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
       zstyle ':completion:*' fzf-search-display true # allow match on description
       zstyle ':completion::*:lsd::*' fzf-completion-opts --preview='eval bat --color=always {1}'
+      zstyle ':completion::*:terraform::*' fzf-completion-opts --height=60% --preview='eval terraform {1} -help | bat --color=always '
+      export FZF_COMPLETION_AUTO_COMMON_PREFIX=true
+
+      # terraform completion
+      complete -C ${pkgs.terraform}/bin/terraform terraform
+
+      # kubectl completion
+      source <(kubectl completion zsh)
+      # make completion work with kubecolor
       # compdef kubecolor=kubectl
     ";
 
