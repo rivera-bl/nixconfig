@@ -9,6 +9,7 @@
       dereference= false;
       indicators = false; # like / for dirs/
       layout = "oneline";
+      hyperlink = "always";
       # total-size = true; # total size of dirs, bug: permission os error
       recursion = { enabled = false; };
       color = { theme = "default"; };

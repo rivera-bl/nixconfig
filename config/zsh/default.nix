@@ -5,9 +5,9 @@
     autocd = true;
     dotDir = ".config/zsh";
 
-    enableAutosuggestions = true;
-    enableCompletion = true; # environment.pathsToLink = [ "/share/zsh" ];
-    enableSyntaxHighlighting = true;
+    # enableAutosuggestions = true;
+    # enableCompletion = true; # environment.pathsToLink = [ "/share/zsh" ];
+    # enableSyntaxHighlighting = true;
 
     dirHashes = {
     };
@@ -40,11 +40,32 @@
     # .zshrc before completion init
     initExtraBeforeCompInit = "";
     completionInit= "
-      autoload -U compinit
-      compinit
+      autoload -U compinit && compinit
+      autoload bashcompinit && bashcompinit
       zmodload zsh/complist
       _comp_options+=(globdots)		# Include hidden files.
 
+      # fzf-tab-completion
+      source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
+      zstyle ':completion:*' fzf-search-display true # allow match on description
+      zstyle ':completion::*:terraform::*' fzf-completion-opts \\
+                                            --preview-window=80% \\
+                                            --height=60% \\
+                                            --preview='eval terraform {1} -help | bat -l help'
+      zstyle ':completion::*:vault::*' fzf-completion-opts \\
+                                            --preview-window=80% \\
+                                            --height=60% \\
+                                            --preview='eval vault {1} -help | bat -l help'
+      # # only makes sense for first command
+      # zstyle ':completion::*:git::*' fzf-completion-opts \\
+      #                                 --height=60% \\
+      #                                 --preview='eval man git {1} | bat -l manpage'
+      export FZF_COMPLETION_AUTO_COMMON_PREFIX=true
+
+      # kubectl completion
+      source <(kubectl completion zsh)
+      # make completion work with kubecolor
+      # compdef kubecolor=kubectl
       # https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
       # source $HOME/.config/_tmuxinator
       ";
@@ -66,11 +87,6 @@
       export FZF_COMPLETION_TRIGGER=','
       # dont show direnv env change when enter dir
       export DIRENV_LOG_FORMAT=
-
-      # aws autocomplete
-      autoload bashcompinit && bashcompinit
-      # which aws_completer
-      complete -C '/run/current-system/sw/bin/aws_completer' aws
 
       # # npm allow global install
       # export PATH=~/.npm-packages/bin:$PATH
@@ -100,38 +116,16 @@
       # dont save failed commands to history
       zshaddhistory() { whence \${\${(z)1}[1]} >| /dev/null || return 1 }
 
+      complete -C '/run/current-system/sw/bin/aws_completer' aws
+      complete -C ${pkgs.terraform}/bin/terraform terraform
+      complete -C ${pkgs.vault}/bin/vault vault
+
       # # zsh-vi-mode
       # source ${pkgs.zsh-vi-mode}/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
       # ZVM_CURSOR_STYLE_ENABLED=false
       # ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
       # # otherwise it overrides fzf C-r
       # zvm_after_init_commands+=('[ -f /home/nixos/system/home/zsh/.fzf.zsh ] && source /home/nixos/system/home/zsh/.fzf.zsh')
-
-      # fzf-tab-completion
-      source \${HOME}/nixconfig/config/fzf/fzf-tab-completion/zsh/fzf-zsh-completion.sh
-      zstyle ':completion:*' fzf-search-display true # allow match on description
-      zstyle ':completion::*:terraform::*' fzf-completion-opts \\
-                                            --preview-window=80% \\
-                                            --height=60% \\
-                                            --preview='eval terraform {1} -help | bat -l help'
-      zstyle ':completion::*:vault::*' fzf-completion-opts \\
-                                            --preview-window=80% \\
-                                            --height=60% \\
-                                            --preview='eval vault {1} -help | bat -l help'
-      # # only makes sense for first command
-      # zstyle ':completion::*:git::*' fzf-completion-opts \\
-      #                                 --height=60% \\
-      #                                 --preview='eval man git {1} | bat -l manpage'
-      export FZF_COMPLETION_AUTO_COMMON_PREFIX=true
-
-      # terraform completion
-      complete -C ${pkgs.terraform}/bin/terraform terraform
-      complete -C ${pkgs.vault}/bin/vault vault
-
-      # kubectl completion
-      source <(kubectl completion zsh)
-      # make completion work with kubecolor
-      # compdef kubecolor=kubectl
     ";
 
     # .zlogin
