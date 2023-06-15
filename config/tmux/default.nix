@@ -2,6 +2,9 @@
 let
   c = config.colorScheme.colors;
   tmuxFzfPath = pkgs.tmuxPlugins.tmux-fzf.out;
+  # TODO remove this, move scripts to bin and call every script from there, so to use the XDG_var..
+  ## also use a single dir for all scripts, and use names like aws_security_hub_filter_finding
+  # tmuxLastPane = ./../bin/tmux/tmux_last_pane;
 in {
   programs.tmux = {
     enable = true;
@@ -42,6 +45,30 @@ in {
       ${builtins.readFile ./tmux.conf}
 
       bind-key g run-shell -b "sh ${tmuxFzfPath}/share/tmux-plugins/tmux-fzf/scripts/pane.sh switch"
+
+      #############################
+      ## HOOKS
+      #############################
+      # TODO fix this breaking
+      # must be pane-focus-in { tmux_autozoom_nvim, tmux_last_pane }  
+      #         pane-focus-out { tmux_last_pane }  
+      # losing focus of tmux when changing programs in windows, is a pane-focus event so,
+      # we should make a variable named TMUX_EVENT_PANE_FOCUS_OUT_CURRENT_COMMAND=
+      # so if pane name is zsh then 1, else 0
+      # if 1 execute the resize command, elif 0 exit
+      #   define this variable here so its is visible
+      #   the same with other shell scripts (meaning each script should have a continue?)
+      set-hook -g pane-focus-in "run-shell -b \
+         'sh ~/code/personal/system/home/zsh/scripts/tmux_autozoom_nvim && \
+          sh ~/code/personal/system/home/zsh/scripts/tmux_last_pane'"
+      set-hook -g pane-focus-out "run-shell \
+        'sh ~/code/personal/system/home/zsh/scripts/tmux_last_pane'"
+      # make the function thinking in other event
+      # could work with pane-focus-out with another function
+      # it has to be a pane-focus in event too for the integration to work
+      # set-hook -g pane-focus-in "run-shell \
+      #   'sh ${tmuxLastPane}'"
+
 
       #############################
       ## STATUS BAR

@@ -20,6 +20,11 @@
   home.file = {
     "tmuxprojects" = {
       recursive = true;
+      source = ../bin;
+      target = ".local/bin";
+     };
+    "tmuxprojects" = {
+      recursive = true;
       source = ./tmuxinator;
       target = ".config/tmuxinator";
      };
