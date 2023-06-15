@@ -13,6 +13,7 @@ alias vi="nvim"
 alias zf="z -I ."
 # alias kubectl="kubecolor"
 # alias rm="echo 'Better use trash-cli.'; false"
+alias rm="rm -v"
 alias sq="sh ~/code/github/simpleql/simpleql"
 
 # z
