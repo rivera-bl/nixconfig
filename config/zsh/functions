@@ -1,5 +1,20 @@
 #!/bin/sh
 
+# $@ pip modules to install
+function venv310(){
+  echo "with import <nixpkgs> {};
+
+  mkShell {
+    name = \"global-venv-for-drafting\";
+    buildInputs = with python3Packages; [ venvShellHook ];
+    venvDir = \"${HOME}/.venv310\";
+    postShellHook = ''
+      pip install $@
+      # trap \"rm -rf ${HOME}/.venv310\" EXIT
+    '';
+  }"
+}
+
 # $@ acc/sts/role
 function vault_sts(){
   vaultread=$(vault read --format=json ${@})
