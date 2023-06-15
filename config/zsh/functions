@@ -6,7 +6,7 @@ function venv310(){
 
   mkShell {
     name = \"global-venv-for-drafting\";
-    buildInputs = with python3Packages; [ venvShellHook ];
+    buildInputs = with python310Packages; [ venvShellHook ];
     venvDir = \"${HOME}/.venv310\";
     postShellHook = ''
       pip install $@

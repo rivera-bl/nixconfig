@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# DISCLAIMER: at the time of writing this aint working with Cisco VPN
+
 # WSL2 Debian 11 Bullseye (updated to testing)
 # Install from Microsoft App Store
 
