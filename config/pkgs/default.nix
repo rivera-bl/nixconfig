@@ -3,7 +3,7 @@
   # TODO split into multiple files, for different roles
   home.packages = with pkgs; [
     bc # dependency of fzf-tmux
-    busybox
+    inetutils
     xclip xsel
     wsl-open
     xdg-utils
