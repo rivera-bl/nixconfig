@@ -82,7 +82,7 @@ in {
 
       aws = {
         format = " [$symbol($profile)]($style)";
-        symbol = "🌦️ " ;
+        symbol = "🌦️  " ;
         style = "fg:62";
         force_display = true;
       };
