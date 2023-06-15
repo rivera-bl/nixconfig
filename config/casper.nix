@@ -18,7 +18,7 @@
   ];
 
   home.file = {
-    "tmuxprojects" = {
+    "bin" = {
       recursive = true;
       source = ../bin;
       target = ".local/bin";
