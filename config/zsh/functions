@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $@ pip modules to install
+# nix-shell -E "$(venv310 boto)"
 function venv310(){
   echo "with import <nixpkgs> {};
 
