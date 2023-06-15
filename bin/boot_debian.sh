@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# DISCLAIMER: at the time of writing this aint working with Cisco VPN
-
 # WSL2 Debian 11 Bullseye (updated to testing)
 # Install from Microsoft App Store
 
@@ -13,7 +11,7 @@ export USERNAME=casper
 # passwd ${USERNAME}
 echo "[boot]
 command=
-systemd=false
+systemd=true
 
 [interop]
 appendWindowsPath=true
@@ -25,7 +23,7 @@ generateResolvConf=true
 hostname=casper
 
 [user]
-default=root" > /etc/wsl.conf
+default=casper" > /etc/wsl.conf
 # switch to testing
 sed -i 's/bullseye/testing/g' /etc/apt/sources.list
 apt update && sudo apt dist-upgrade
@@ -74,6 +72,16 @@ echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] 
 sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io -y
 sudo usermod -aG docker ${USERNAME}
+# THIS IS IMPORTANT WHEN USING VPN
+# gotta assign an specific address so it doesnt overlaps with the VPN DNS servers
+echo "{
+  "default-address-pools" : [
+    {
+      "base" : "172.240.0.0/16",
+      "size" : 24
+    }
+  ]
+}" > /etc/docker/daemon.json
 docker --version # 24.0
 docker run hello-world
 # sam cli
