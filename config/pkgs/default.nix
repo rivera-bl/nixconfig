@@ -25,6 +25,7 @@
     jwt-cli
     consul
 
+    minikube
     kubectl kubecolor krew kustomize trivy stern linkerd datree argocd helm-docs
     terraform terraform-ls terraform-docs hcl2json tfk8s terraformer
     checkov
