@@ -2,11 +2,9 @@
 {
   # TODO split into multiple files, for different roles
   home.packages = with pkgs; [
-    bc # dependency of fzf-tmux
-    inetutils
+    zip unzip bc inetutils
+    wsl-open xdg-utils
     xclip xsel
-    wsl-open
-    xdg-utils
     neofetch
 
     zsh

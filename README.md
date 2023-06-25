@@ -24,25 +24,4 @@ Docker systemd works in WSL with VPN when docker network doesn't overlaps VPN DN
 route -n
 ````
 
-### Nixos
-
-Docker and podman (root) configured via NixOS, and minikube via HM.
-
-````bash
-minikube start --kubernetes-version='v1.26.1' --driver=podman --container-runtime=cri-o
-kubectl run tmp -ti --rm --privileged=true --image=nginx:alpine -- sh
-````
-
-### Debian and openSUSE
-
-Docker and podman (rootless) configured via Apt, and minikube via HM.
-
-````bash
-sudo apt install -y podman
-# minikube not working yet
-minikube config set rootless true
-minikube start --kubernetes-version='v1.26.1' --driver=podman --container-runtime=cri-o
-kubectl run tmp -ti --rm --privileged=true --image=nginx:alpine -- sh
-````
-
 [1]: https://gist.github.com/adisbladis/187204cb772800489ee3dac4acdd9947
