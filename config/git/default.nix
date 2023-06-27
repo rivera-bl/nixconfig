@@ -20,6 +20,7 @@
     ignores = [
       ".terraform"
       "terraform.tfstate*"
+      ".terraform.lock.hcl"
       ".direnv"
       "result"
       "Session.vim"
