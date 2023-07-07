@@ -30,7 +30,7 @@
     crane
 
     # lua
-    # go
+    go
     python3 poetry
     # cargo rustc rnix-lsp
     # gnumake cmake gcc

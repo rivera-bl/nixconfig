@@ -93,3 +93,6 @@ sudo ./sam-installation/install
 ssh-keygen -f ~/.ssh/workgitlab -t ed25519 -a 100
 cat ~/.ssh/workgitlab.pub | clip.exe
 echo "IdentityFile ~/.ssh/workgitlab" > ~/.ssh/config
+### nodejs 18
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash - &&\
+apt-get install -y nodejs
