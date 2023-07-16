@@ -1,5 +1,14 @@
 #!/bin/sh
 
+function npm18(){
+  docker run --rm \
+    -v "$(pwd)/package.json:/app/package.json" \
+    -v "$(pwd)/package-lock.json:/app/package-lock.json" \
+    -w /app \
+    node:18-alpine \
+    npm "$@"
+}
+
 # nix-shell -E "$(venv310 boto)"
 function venv310(){
   echo "with import <nixpkgs> {};
