@@ -16,14 +16,15 @@ in {
         timeFormat = "02 Jan 06 15 =04 MST"; # https =//pkg.go.dev/time#Time.Format
         theme = {
           lightTheme = false;
-          activeBorderColor = [ "#${colors.base0B}" "bold" ];
-          inactiveBorderColor = [ "#${colors.base0A}" ];
+          # activeBorderColor = [ "#${colors.base0B}" "bold" ];
+          # inactiveBorderColor = [ "#${colors.base0A}" ];
           optionsTextColor = [ "blue" ];
-          selectedLineBgColor = [ "default" ];
-          selectedRangeBgColor = [ "default" ];
+          selectedLineBgColor = [ "#1e2528" ]; # nvchad-everblush
+          selectedRangeBgColor = [ "#1e2528" ];
           cherryPickedCommitBgColor = [ "cyan" ];
           cherryPickedCommitFgColor = [ "blue" ];
           unstagedChangesColor = [ "red" ];
+          defaultFgColor = [ "default" ];
         };
         commitLength = { show = true; };
         mouseEvents = true;
@@ -33,7 +34,7 @@ in {
         showListFooter = true; # for seeing the "5 of 20" message in list panels
         showRandomTip = false;
         showBottomLine = true; # for hiding the bottom information line (unless it has important information to tell you)
-        showCommandLog = true;
+        showCommandLog = false;
         showIcons = true;
         commandLogSize = 8;
         splitDiff = "always"; # one of "auto" | "always"
