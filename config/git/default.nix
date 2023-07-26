@@ -26,6 +26,8 @@
       "Session.vim"
       ".venv*"
       "Makefile"
+      "node_modules"
+      "dist"
     ];
   };
 }

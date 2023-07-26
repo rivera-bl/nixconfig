@@ -19,6 +19,11 @@
   ];
 
   home.file = {
+    "bin" = {
+      recursive = true;
+      source = ../bin;
+      target = ".local/bin";
+     };
     "tmuxinator" = {
       recursive = true;
       source = ./tmuxinator;

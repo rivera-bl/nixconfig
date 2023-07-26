@@ -60,6 +60,8 @@ function FileBuild()
 
   if filetype == 'terraform' then
     Run('terraform apply')
+  elseif filetype == 'go' then
+    Run('go run ' .. vim.fn.expand("%:p"))
   elseif filetype == 'yaml' then
     if vim.fn.system('grep -q -m 10 "apiVersion:" ' .. vim.fn.expand("%:p")) then
       Run('kubectl apply -f ' .. vim.fn.expand("%:p"))
