@@ -1,5 +1,23 @@
 #!/bin/sh
 
+# create a basic assume role for user
+# $1 role name, $2 account id, $3 user name
+function aws_sts_role(){
+  aws iam create-role --role-name $1 --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::'${2}':user/'${3}'"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }'
+}
+
 function npm18(){
   docker run --rm \
     -v "$(pwd)/package.json:/app/package.json" \
@@ -162,14 +180,15 @@ function insert_csv(){
   done <<< $csv_files
 }
 
-function k8_ecr_auth(){
-  ACCOUNT=$(tmux showenv | \
-    grep '^AWS_PROFILE' | awk -F '=' '{print $2}' | awk -F '_' '{print $1}')
-  TOKEN=$(aws ecr get-login-password --region us-east-1 | cut -d' ' -f6)
-  kubectl delete secret regcred --ignore-not-found=true
-  kubectl create secret docker-registry regcred --docker-server=$ACCOUNT.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$TOKEN
-  # kubectl patch serviceaccount default -p "{\"imagePullSecrets\": [{\"name\": \"regcred\"}]}"
-}
+# # old function for on-prem auth
+# function k8_ecr_auth(){
+#   ACCOUNT=$(tmux showenv | \
+#     grep '^AWS_PROFILE' | awk -F '=' '{print $2}' | awk -F '_' '{print $1}')
+#   TOKEN=$(aws ecr get-login-password --region us-east-1 | cut -d' ' -f6)
+#   kubectl delete secret regcred --ignore-not-found=true
+#   kubectl create secret docker-registry regcred --docker-server=$ACCOUNT.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$TOKEN
+#   # kubectl patch serviceaccount default -p "{\"imagePullSecrets\": [{\"name\": \"regcred\"}]}"
+# }
 
 function fzf_git_dirs(){
   sh ~/code/github/fzf_git/fzf_git
@@ -425,16 +444,6 @@ function hval() {
 ##################
 ### KUBECTL
 ##################
-
-# switch k8 namespace
-function k8_namespace_switch(){
-  selection=$(kubectl get namespaces |  fzf --header-lines=1)
-
-  if [ ! -z "$selection" ]; then
-    namespace=$(echo $selection | awk '{print $1}')
-    kubectl config set-context --current --namespace=$namespace
-  fi
-}
 
 # kubectl debug dpc5-8554458c8f-zdrl5 -it --image=ubuntu --share-processes --copy-to=debug-dpc5
 # kubectl exec -ti debug-dpc5 -c $(kubectl debug  dpc5-8554458c8f-zdrl5 --image=ubuntu --share-processes --copy-to=debug-dpc5 | awk '{print $6}' | tr -d '.' && sleep 5s) -- sh

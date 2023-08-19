@@ -33,7 +33,8 @@ vim.g.copilot_filetypes = {
 	["sh"] = true,
   ["terraform"] = true,
   ["yaml"] = true,
-  ["nix"] = true
+  ["nix"] = true,
+  ["typescript"] = true
 }
 
 vim.cmd('syntax on')
