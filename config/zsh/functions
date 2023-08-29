@@ -2,7 +2,8 @@
 
 # create a basic assume role for user
 # $1 role name, $2 account id, $3 user name
-function aws_sts_role(){
+# aws iam put-role-policy --role-name $1 --policy-name pipeline --policy-document file://inline.json
+function aws_create_sts_role(){
   aws iam create-role --role-name $1 --assume-role-policy-document '{
     "Version": "2012-10-17",
     "Statement": [
@@ -10,7 +11,9 @@ function aws_sts_role(){
         "Sid": "",
         "Effect": "Allow",
         "Principal": {
-          "AWS": "arn:aws:iam::'${2}':user/'${3}'"
+          "AWS": [
+            "arn:aws:iam::'${2}':user/'${3}'"
+          ]
         },
         "Action": "sts:AssumeRole"
       }
@@ -40,6 +43,15 @@ function venv310(){
       # trap \"rm -rf ${HOME}/.venv310\" EXIT
     '';
   }"
+}
+
+# $1 role-arn
+function aws_sts(){
+  awsread=$(aws sts assume-role --role-arn ${1} --role-session-name test)
+
+  export AWS_ACCESS_KEY_ID=$(jq -r '.Credentials.AccessKeyId' <<< "$awsread")
+  export AWS_SECRET_ACCESS_KEY=$(jq -r '.Credentials.SecretAccessKey' <<< "$awsread")
+  export AWS_SESSION_TOKEN=$(jq -r '.Credentials.SessionToken' <<< "$awsread")
 }
 
 # $@ acc/sts/role
