@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# $1 role name, optional: $2 trusty policy file, optional: $3 inline policy file
+function aws_inrole(){
+  aws iam create-role --role-name ${1} \
+    --assume-role-policy-document file://${2:-"trust-policy.json"}
+
+  aws iam put-role-policy --role-name ${1} \
+      --policy-name inline \
+      --policy-document file://${3:-"inline-policy.json"}
+}
+
 # create a basic assume role for user
 # $1 role name, $2 account id, $3 user name
 # aws iam put-role-policy --role-name $1 --policy-name pipeline --policy-document file://inline.json

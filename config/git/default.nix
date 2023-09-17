@@ -19,7 +19,7 @@
     };
     ignores = [
       ".terraform"
-      "terraform.tfstate*"
+      "*.tfstate*"
       ".terraform.lock.hcl"
       ".direnv"
       "result"
