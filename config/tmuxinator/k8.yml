@@ -1,5 +1,5 @@
 name: k8
-root: ~/code/gitlab/seguridad-informatica/regional/devsecops/sdlc/iac/applications-configurations
+root: ~/code/gitlab/cencosud/seguridad-informatica/regional/devsecops/sdlc/iac/applications-configurations
 
 windows:
   - main:

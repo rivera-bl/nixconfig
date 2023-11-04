@@ -71,6 +71,7 @@
   colorScheme = inputs.nixcolors.colorSchemes.tokyo-night-dark;
 
   home.sessionVariables = {
+    TMUX_TMPDIR = "/tmp";
     EDITOR = "nvim";
     BROWSER = "firefox";
     SHELL = "zsh";

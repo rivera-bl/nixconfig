@@ -16,7 +16,7 @@ in {
     keyMode = "vi";
     newSession = false;
     prefix = "C-a";
-    secureSocket = true;
+    secureSocket = false;
     tmuxinator.enable = true;
 
     plugins = with pkgs.tmuxPlugins; [ {
