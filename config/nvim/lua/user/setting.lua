@@ -34,7 +34,8 @@ vim.g.copilot_filetypes = {
   ["terraform"] = true,
   ["yaml"] = true,
   ["nix"] = true,
-  ["typescript"] = true
+  ["typescript"] = true,
+  ["sql"] = true
 }
 
 vim.cmd('syntax on')

@@ -28,6 +28,8 @@
       "Makefile"
       "node_modules"
       "dist"
+      "*.xpkg"
+      "__pycache__"
     ];
   };
 }
