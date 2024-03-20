@@ -1,18 +1,6 @@
 #!/bin/python
+import argparse
 import boto3
-
-# bucket_name = 'velero-234951'
-# prefix = 'magi/backups/'
-
-# get bucket_name and prefix as arguments
-import sys
-if len(sys.argv) > 1:
-    bucket_name = sys.argv[1]
-if len(sys.argv) > 2:
-    prefix = sys.argv[2]
-
-s3 = boto3.client('s3')
-response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
 
 # Function to convert bytes to a human-readable format
 def convert_bytes_to_human_readable(size_in_bytes):
@@ -30,20 +18,40 @@ def convert_bytes_to_human_readable(size_in_bytes):
     else:
         return f"{size_in_bytes:.2f} Bytes"
 
-# Group objects by the subfolder
-grouped_objects = {}
-for obj in response.get('Contents', []):
-    key_parts = obj['Key'].split('/')
-    
-    if len(key_parts) > 2:  # Check if there is a subfolder
-        subfolder_key = '/'.join(key_parts[1:-1])
-        
-        if subfolder_key not in grouped_objects:
-            grouped_objects[subfolder_key] = {'Folder': subfolder_key, 'TotalSize': 0}
-        
-        grouped_objects[subfolder_key]['TotalSize'] += obj['Size']
+def main():
+    parser = argparse.ArgumentParser(description='List objects in an S3 bucket and display total size for a single prefix.')
+    parser.add_argument('bucket_name', type=str, help='Name of the S3 bucket')
+    parser.add_argument('prefix', type=str, help='Prefix for filtering objects')
+    parser.add_argument('--total-size', action='store_true', help='Calculate total size for a single prefix')
 
-# Print the results
-for group in grouped_objects.values():
-    total_size_human_readable = convert_bytes_to_human_readable(group['TotalSize'])
-    print(f"Folder: {group['Folder']}, Total Size: {total_size_human_readable}")
+    args = parser.parse_args()
+
+    s3 = boto3.client('s3')
+    response = s3.list_objects_v2(Bucket=args.bucket_name, Prefix=args.prefix)
+
+    if args.total_size:
+        total_size = sum(obj['Size'] for obj in response.get('Contents', []))
+        total_size_human_readable = convert_bytes_to_human_readable(total_size)
+        print(f"Total Size for Prefix '{args.prefix}': {total_size_human_readable}")
+    else:
+        # Group objects by the subfolder
+        grouped_objects = {}
+        for obj in response.get('Contents', []):
+            key_parts = obj['Key'].split('/')
+            
+            if len(key_parts) > 2:  # Check if there is a subfolder
+                subfolder_key = '/'.join(key_parts[1:-1])
+                
+                if subfolder_key not in grouped_objects:
+                    grouped_objects[subfolder_key] = {'Folder': subfolder_key, 'TotalSize': 0}
+                
+                grouped_objects[subfolder_key]['TotalSize'] += obj['Size']
+
+        # Print the results
+        for group in grouped_objects.values():
+            total_size_human_readable = convert_bytes_to_human_readable(group['TotalSize'])
+            print(f"Folder: {group['Folder']}, Total Size: {total_size_human_readable}")
+
+if __name__ == "__main__":
+    main()
+

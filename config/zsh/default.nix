@@ -145,6 +145,7 @@
       enable = true;
       plugins = [
         { name = "chitoku-k/fzf-zsh-completions"; }
+        { name = "s1msn/velero-zsh-autocomplete-plugin"; }
         { name = "olets/zsh-abbr"; }
         # { name = "jeffreytse/zsh-vi-mode"; }
         { name = "zsh-users/zsh-syntax-highlighting"; tags = [ defer:2 ]; }

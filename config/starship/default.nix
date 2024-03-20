@@ -70,11 +70,16 @@ in {
         symbol = " ";
         style = "bold blue dimmed";
       };
-
+      # 🏄⛵
       kubernetes = {
-        format = " ⛵ [$context](32) [\{$namespace\}](32)";
+        format = " 🏄 [$context](32) [\{$namespace\}](32)";
         # detect_files = [".k8s"]; # detect_extensions, detect_files, and detect_folders
         disabled = false;
+        context_aliases = {
+          "default" = "melchior";
+          "kind-casper" = "casper";
+          "arn:aws:eks:us-east-1:817860761669:cluster/helios-cluster" = "helios";
+        };
         # ^arn:aws:eks:\w+(?:-\w+)+:\d{12}:cluster\/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+$
         # context_aliases = {
         # };
@@ -93,7 +98,6 @@ in {
         disabled = false;
       };
 
-      # 🏄
       #############################
       ### Languages
       #############################

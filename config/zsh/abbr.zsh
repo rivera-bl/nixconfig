@@ -39,6 +39,17 @@ abbr ksd="kubectl describe deployment"
 abbr krd="kubectl rollout restart deployment"
 ## context
 abbr kn="kubectl config set-context --current --namespace"
+## velero
+abbr v="velero"
+abbr vg="velero get"
+abbr vd="velero delete"
+abbr vs="velero describe"
+abbr va="velero create"
+## velero backups
+abbr vgb="velero get backups"
+abbr vdb="velero delete backups"
+abbr vsb="velero describe backups"
+abbr vab="velero create backups"
 ## kubectl fzf
 abbr kfn="k8_namespace_switch"
 abbr kfl="k8_follow_logs"

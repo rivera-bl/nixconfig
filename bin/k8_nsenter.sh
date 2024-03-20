@@ -21,7 +21,7 @@ kubectl run ${podName:?} --restart=Never -it --rm --image overriden --overrides 
     "containers": [
       {
         "name": "nsenter",
-        "image": "alexeiled/nsenter:2.38.1",
+        "image": "817860761669.dkr.ecr.us-east-1.amazonaws.com/nsenter:2.38.1",
         "command": [
           "/nsenter", "--all", "--target=1", "--", "su", "-"
         ],
