@@ -78,5 +78,6 @@
     XDG_DESKTOP_DIR = "$HOME";
     XDG_DOWNLOAD_DIR = "/tmp";
     XDG_CONFIG_HOME = "$HOME/.config";
+    XDG_STATE_HOME = "$HOME/.local/state";
   };
 }

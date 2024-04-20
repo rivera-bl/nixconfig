@@ -108,7 +108,7 @@ capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
 require'lspconfig'.gopls.setup{}
 
 -- rnix
-require'lspconfig'.rnix.setup{}
+-- require'lspconfig'.rnix.setup{}
 
 -- terraform
 require'lspconfig'.terraformls.setup{
