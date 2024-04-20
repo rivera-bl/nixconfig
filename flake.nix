@@ -59,6 +59,22 @@
        extraSpecialArgs = { inherit inputs; };
       };
 
+      homeConfigurations.tessaria = home-manager.lib.homeManagerConfiguration {
+       inherit pkgs;
+       modules = [
+        { _module.args = inputs; }
+        ./config/tessaria.nix
+         {
+           home = {
+            homeDirectory = "/home/tessaria";
+            username = "tessaria";
+            stateVersion = "23.05";
+           };
+         }
+       ];
+       extraSpecialArgs = { inherit inputs; };
+      };
+
       homeConfigurations.casper = home-manager.lib.homeManagerConfiguration {
        inherit pkgs;
        modules = [
