@@ -75,6 +75,22 @@
        extraSpecialArgs = { inherit inputs; };
       };
 
+      homeConfigurations.ecco = home-manager.lib.homeManagerConfiguration {
+       inherit pkgs;
+       modules = [
+        { _module.args = inputs; }
+        ./config/ecco.nix
+         {
+           home = {
+            homeDirectory = "/home/ecco";
+            username = "ecco";
+            stateVersion = "23.11";
+           };
+         }
+       ];
+       extraSpecialArgs = { inherit inputs; };
+      };
+
       homeConfigurations.casper = home-manager.lib.homeManagerConfiguration {
        inherit pkgs;
        modules = [
