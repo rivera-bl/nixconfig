@@ -1,5 +1,17 @@
 #!/bin/sh
 
+# connect to ssm private ec2 instance with mosh
+# requires open ports 60000 to 61000
+# user, instance-id, instance-ip
+function mossm(){
+  echo "Starting mosh-server..."
+  output=$(ssh -o ProxyCommand="aws ssm start-session --target i-0f2e3ec41e833effd --document-name AWS-StartSSHSession --parameters 'portNumber=22'" $1@$2 mosh-server | grep "MOSH CONNECT" | tr -d '\r\n')
+  mosh_port=$(echo $output | awk '{ print $3 }')
+  mosh_key=$(echo $output | awk '{ print $4 }')
+  echo "Starting mosh-client on port $mosh_port with key $mosh_key..."
+  MOSH_KEY="$mosh_key" mosh-client "$3" "$mosh_port"
+}
+
 function crossplane_xpkg(){
   docker build . -t $1
   echo "Built image $1..."
