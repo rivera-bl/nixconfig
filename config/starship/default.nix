@@ -11,7 +11,7 @@ in {
     settings = {
       format = "
 [┌─$nix_shell($directory)](bold fg:#${colors.base0F})$kubernetes$python$aws
-[└─($character)](bold fg:#${colors.base0F})";
+[└─($character)](bold fg:#${colors.base0F})($hostname)";
       right_format = "$cmd_duration";
       add_newline = false;
       line_break = { disabled = true; };
@@ -32,10 +32,10 @@ in {
       };
 
       hostname = {
-        disabled = true;
+        disabled = false;
         style = "fg:62";
-        # ssh_only = true;
-        format = "[$ssh_symbol](bold blue)[@]($style)[$hostname]($style)($style)";
+        ssh_only = true;
+        format = "[$ssh_symbol]";
         trim_at = ".companyname.com";
       };
 
