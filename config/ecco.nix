@@ -63,6 +63,7 @@
   colorScheme = inputs.nixcolors.colorSchemes.tokyo-night-dark;
 
   home.sessionVariables = {
+    NIXPKGS_ALLOW_UNFREE = "1";
     TMUX_TMPDIR = "/tmp";
     EDITOR = "nvim";
     BROWSER = "firefox";
