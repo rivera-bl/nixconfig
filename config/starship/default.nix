@@ -11,7 +11,7 @@ in {
     settings = {
       format = "
 [┌─$nix_shell($directory)](bold fg:#${colors.base0F})$kubernetes$python$aws
-[└─($character)](bold fg:#${colors.base0F})($hostname)";
+[└─($character)](bold fg:#${colors.base0F})";
       right_format = "$cmd_duration";
       add_newline = false;
       line_break = { disabled = true; };
@@ -32,6 +32,7 @@ in {
       };
 
       hostname = {
+        disabled = true;
         style = "fg:62";
         ssh_only = true;
         format = "[$ssh_symbol](bold blue)[@]($style)[$hostname]($style)($style)";
