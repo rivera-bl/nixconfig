@@ -19,6 +19,7 @@
   home.packages = with pkgs; [
     kubectl terraform vault
     amazon-ecr-credential-helper
+    mosh
   ];
 
   home.file = {
