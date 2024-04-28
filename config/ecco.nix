@@ -7,7 +7,6 @@
     ./nvim
     ./tmux
     ./zsh
-    ./bash
     ./git
     ./fonts
     ./fzf
