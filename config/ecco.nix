@@ -1,4 +1,5 @@
 { config, inputs, lib, pkgs, ... }:
+
 {
   imports = [
     ./bat
@@ -18,8 +19,9 @@
 
   home.packages = with pkgs; [
     (python311.withPackages(ps: with ps; [ boto3 psycopg2 gitlab ]))
-    kubectl terraform vault
+    kubectl terraform vault kustomize
     amazon-ecr-credential-helper
+    inetutils
     mosh
     inputs.kfc.defaultPackage.${system}
     inputs.iamlive.packages.${system}.default
