@@ -6,7 +6,6 @@
     ./bottom/bottom.nix
     ./direnv/direnv.nix
     ./lsd/lsd.nix
-    ./noti/noti.nix
     ./nvim
     ./tmux/tmux.nix # TODO convert to nix
     ./zsh/zsh.nix

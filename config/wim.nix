@@ -5,7 +5,6 @@
     ./bottom
     ./direnv
     ./lsd
-    ./noti
     ./nvim
     ./tmux
     ./zsh
