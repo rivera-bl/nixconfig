@@ -35,7 +35,7 @@ in {
         disabled = false;
         style = "fg:62";
         ssh_only = true;
-        format = "[$ssh_symbol]";
+        format = "[$ssh_symbol](bold blue)";
         trim_at = ".companyname.com";
       };
 
