@@ -34,7 +34,7 @@ in {
       hostname = {
         disabled = true;
         style = "fg:62";
-        ssh_only = true;
+        # ssh_only = true;
         format = "[$ssh_symbol](bold blue)[@]($style)[$hostname]($style)($style)";
         trim_at = ".companyname.com";
       };
