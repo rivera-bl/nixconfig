@@ -15,6 +15,11 @@
     inputs.nixcolors.homeManagerModule
   ];
 
+
+  home.packages = with pkgs; [
+    kubectl terraform vault
+  ];
+
   home.file = {
     "bin" = {
       recursive = true;
