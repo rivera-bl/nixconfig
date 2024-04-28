@@ -16,10 +16,9 @@
     inputs.nixcolors.homeManagerModule
   ];
 
-
   home.packages = with pkgs; [
     (python311.withPackages(ps: with ps; [ boto3 psycopg2 gitlab ]))
-    kubectl kustomize helm
+    kubectl kustomize kubernetes-helm
     terraform vault
     amazon-ecr-credential-helper
     inetutils
