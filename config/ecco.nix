@@ -17,9 +17,12 @@
 
 
   home.packages = with pkgs; [
+    (python311.withPackages(ps: with ps; [ boto3 psycopg2 gitlab ]))
     kubectl terraform vault
     amazon-ecr-credential-helper
     mosh
+    inputs.kfc.defaultPackage.${system}
+    inputs.iamlive.packages.${system}.default
   ];
 
   home.file = {
