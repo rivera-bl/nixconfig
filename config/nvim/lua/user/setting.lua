@@ -108,6 +108,9 @@ vim.g['BufSurfIgnore'] = 'NetrwTreeListing,NetrwTreeListing[-]'
 --- LAZYGIT
 -----------------------
 vim.g['lazygit_floating_window_scaling_factor'] = 1.0
+-- not getting .config custom file due to nix readonly filesystem, seems like a bug from lazygit
+vim.g.lazygit_use_custom_config_file_path = 1
+vim.g.lazygit_config_file_path = { "/home/wim/nixconfig/lazygit.yaml" }
 
 -----------------------
 --- NETRW

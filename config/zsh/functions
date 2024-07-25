@@ -5,7 +5,7 @@
 # user, instance-id, instance-ip
 function mossm(){
   echo "Starting mosh-server..."
-  output=$(ssh -o ProxyCommand="aws ssm start-session --target i-0f2e3ec41e833effd --document-name AWS-StartSSHSession --parameters 'portNumber=22'" $1@$2 mosh-server | grep "MOSH CONNECT" | tr -d '\r\n')
+  output=$(ssh -Yo ProxyCommand="aws ssm start-session --target $2 --document-name AWS-StartSSHSession --parameters 'portNumber=22'" $1@$2 mosh-server | grep "MOSH CONNECT" | tr -d '\r\n')
   mosh_port=$(echo $output | awk '{ print $3 }')
   mosh_key=$(echo $output | awk '{ print $4 }')
   echo "Starting mosh-client on port $mosh_port with key $mosh_key..."
